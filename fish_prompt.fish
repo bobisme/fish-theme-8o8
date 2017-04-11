@@ -1,16 +1,35 @@
-# name: clearance
+# name: 8o8
 # ---------------
-# Based on idan. Display the following bits on the left:
+# Based on clearance Display the following bits on the left:
 # - Virtualenv name (if applicable, see https://github.com/adambrenecki/virtualfish)
 # - Current directory name
 # - Git branch and dirty state (if inside a git repo)
 
-function _git_branch_name
-  echo (command git symbolic-ref HEAD ^/dev/null | sed -e 's|^refs/heads/||')
+function __git_ref -S -d 'Get the current git branch (or commitish)'
+  set -l ref (command git symbolic-ref HEAD ^/dev/null)
+    and string replace 'refs/heads/' '' $ref
+    and return
+
+  set -l tag (command git describe --tags --exact-match ^/dev/null)
+    and echo $tag
+    and return
+
+  set -l branch (command git show-ref --head --hash --abbrev  ^/dev/null | head -n1)
+  echo $branch
 end
 
-function _git_is_dirty
+function __git_is_dirty
   echo (command git status -s --ignore-submodules=dirty ^/dev/null)
+end
+
+function __line
+  set -l gray (set_color $fish_color_autosuggestion)
+  set -l normal (set_color normal)
+  echo -n -e "$gray\e(0"
+  for _ in (seq $COLUMNS)
+    printf 'q'
+  end
+  echo -e "\e(B$normal"
 end
 
 function fish_prompt
@@ -22,13 +41,15 @@ function fish_prompt
   set -l blue (set_color blue)
   set -l green (set_color green)
   set -l normal (set_color normal)
+  set -l gray (set_color brblack)
+  set -l middot '·'
 
   set -l cwd $blue(pwd | sed "s:^$HOME:~:")
 
   # Output the prompt, left to right
 
-  # Add a newline before new prompts
-  echo -e ''
+  # Add a line before new prompts
+  __line
 
   # Display [venvname] if in a virtualenv
   if set -q VIRTUAL_ENV
@@ -39,22 +60,20 @@ function fish_prompt
   echo -n -s $cwd $normal
 
   # Show git branch and status
-  if [ (_git_branch_name) ]
-    set -l git_branch (_git_branch_name)
-
-    if [ (_git_is_dirty) ]
-      set git_info '(' $yellow $git_branch "±" $normal ')'
+  set -l git_ref (__git_ref)
+  if [ -n "$git_ref" ]
+    if [ (__git_is_dirty) ]
+      set git_info $gray '«' $yellow $git_ref "±" $gray '»' $normal
     else
-      set git_info '(' $green $git_branch $normal ')'
+      set git_info $gray '«' $green $git_ref $gray '»' $normal
     end
-    echo -n -s ' · ' $git_info $normal
+    echo -n -s $gray ' ' $git_info $normal
   end
 
   set -l prompt_color $red
   if test $last_status = 0
     set prompt_color $normal
   end
-
   # Terminate with a nice prompt char
   echo -e ''
   echo -e -n -s $prompt_color '⟩ ' $normal
