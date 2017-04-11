@@ -1,8 +1,10 @@
-# Fish Theme: clearance
+# Fish Theme: 8o8
+
+Based on: clearance
 
 A minimalist [fish shell](http://fishshell.com/) theme for people who use git
 
-![clearance theme](https://raw.github.com/cseelus/clearance-fish/master/clearance-fish_preview.png)
+![8o8 theme](https://raw.github.com/bobisme/fish-theme-8o8/master/8o8-fish_preview.png)
 
 ## Like it?
 
