@@ -4,35 +4,37 @@
 # - Virtualenv name (if applicable, see https://github.com/adambrenecki/virtualfish)
 # - Current directory name
 # - Git branch and dirty state (if inside a git repo)
-
-function __git_ref -S -d 'Get the current git branch (or commitish)'
-  set -l ref (command git symbolic-ref HEAD ^/dev/null)
-    and string replace 'refs/heads/' '' $ref
-    and return
-
-  set -l tag (command git describe --tags --exact-match ^/dev/null)
-    and echo $tag
-    and return
-
-  set -l branch (command git show-ref --head --hash --abbrev  ^/dev/null | head -n1)
-  echo $branch
-end
-
-function __git_is_dirty
-  echo (command git status -s --ignore-submodules=dirty ^/dev/null)
-end
-
-function __line
-  set -l gray (set_color $fish_color_autosuggestion)
-  set -l normal (set_color normal)
-  echo -n -e "$gray\e(0"
-  for _ in (seq $COLUMNS)
-    printf 'q'
-  end
-  echo -e "\e(B$normal"
-end
-
 function fish_prompt
+  function __git_ref -S -d 'Get the current git branch (or commitish)'
+    set -l ref (command git symbolic-ref HEAD ^/dev/null)
+      and string replace 'refs/heads/' '' $ref
+      and return
+
+    set -l tag (command git describe --tags --exact-match ^/dev/null)
+      and echo $tag
+      and return
+
+    set -l branch (command git show-ref --head --hash --abbrev  ^/dev/null | head -n1)
+    echo $branch
+  end
+
+  function __git_is_dirty
+    echo (command git status -s --ignore-submodules=dirty ^/dev/null)
+  end
+
+  function __line
+    # line doesn't work in tmux
+    test -n "$TMUX"; and return
+
+    set -l gray (set_color $fish_color_autosuggestion)
+    set -l normal (set_color normal)
+    echo -n -e "$gray\e(0"
+    for _ in (seq $COLUMNS)
+      printf 'q'
+    end
+    echo -e "\e(B$normal"
+  end
+
   set -l last_status $status
 
   set -l cyan (set_color cyan)
