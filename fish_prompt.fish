@@ -5,6 +5,14 @@
 # - Current directory name
 # - Git branch and dirty state (if inside a git repo)
 function fish_prompt
+  set -l cyan (set_color cyan)
+  set -l yellow (set_color yellow)
+  set -l red (set_color red)
+  set -l blue (set_color blue)
+  set -l green (set_color green)
+  set -l normal (set_color normal)
+  set -l gray (set_color brblack)
+
   function __git_ref -S -d 'Get the current git branch (or commitish)'
     set -l ref (command git symbolic-ref HEAD ^/dev/null)
       and string replace 'refs/heads/' '' $ref
@@ -14,8 +22,21 @@ function fish_prompt
       and echo $tag
       and return
 
-    set -l branch (command git show-ref --head --hash --abbrev  ^/dev/null | head -n1)
-    echo $branch
+    set -l branch (command git branch ^/dev/null | grep '*')
+    if test -n "$branch"
+      set branch (string replace '* ' '' $branch)
+      if string match '*detached*' "$branch" >/dev/null
+        set branch (string replace '(' '' $branch)
+        set branch (string replace 'HEAD detached at ' '' $branch)
+        set branch (string replace ')' '' $branch)
+        set branch (set_color brmagenta)"$branch"
+      end
+      echo $branch
+      return
+    end
+
+    set -l commit (command git show-ref --head --hash --abbrev  ^/dev/null | head -n1)
+      and echo $commit
   end
 
   function __git_is_dirty
@@ -36,14 +57,6 @@ function fish_prompt
   end
 
   set -l last_status $status
-
-  set -l cyan (set_color cyan)
-  set -l yellow (set_color yellow)
-  set -l red (set_color red)
-  set -l blue (set_color blue)
-  set -l green (set_color green)
-  set -l normal (set_color normal)
-  set -l gray (set_color brblack)
   set -l middot '·'
 
   set -l cwd $blue(pwd | sed "s:^$HOME:~:")
